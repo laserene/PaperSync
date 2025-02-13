@@ -1,27 +1,23 @@
-import os.path
+import os
 
+import requests
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.errors import HttpError
-from ollama import chat, ChatResponse
+from huggingface_hub import InferenceClient
 
 from config import *
 from google_services import *
 
+os.environ['HF_TOKEN'] = "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"
+
 
 def query_llm(prompt, model="deepseek-r1:1.5b"):
-    response: ChatResponse = chat(
-        model=model,
-        messages=[
-            {
-                'role': 'user',
-                'content': prompt,
-            }
-        ]
-    )
-
-    return response.message.content
+    client = InferenceClient("HuggingFaceTB/SmolLM2-135M-Instruct")
+    messages = [{"role": "user", "content": "What is the capital of France?"}]
+    response = client.chat_completion(messages)
+    return response.choices[0].message
 
 
 def main():
@@ -51,11 +47,31 @@ def main():
     try:
         text_content = read_google_docs(creds, DOCUMENT_ID)
 
-        prompt = f'Extract all papers from this text: {text_content}'
+        prompt = (f'You are a helpful AI Agent in report reading. You are tasked with reading a report that often '
+                  f'contains references to other papers and extract all paper titles. References are often bounded '
+                  f'inside a pair of parenthesis and follow the (author - paper title) format. Do not duplicate the '
+                  f'paper of the report. Output a list of paper titles seperated by a comma. \n\nHere is the report: '
+                  f'{text_content}\n\n Output:')
 
-        paper_titles = query_llm(prompt)
+        # paper_titles = query_llm(prompt)
 
-        update_google_sheet(creds, SPREADSHEET_ID, RANGE, paper_titles)
+        # update_google_sheet(creds, SPREADSHEET_ID, RANGE, paper_titles)
+
+        API_URL = "https://api-inference.huggingface.co/models/google/gemma-2-2b-it"
+        headers = {
+            "Authorization": f"Bearer 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",
+            "Content-Type": "application/json",
+            "x-use-cache": "false"
+        }
+        payload = {
+            "inputs": prompt,
+        }
+
+        try:
+            response = requests.post(API_URL, headers=headers, json=payload)
+            print(response.json())
+        except Exception as e:
+            print(f"Err {e}")
 
     except HttpError as err:
         print(err)
