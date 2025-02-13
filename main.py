@@ -57,23 +57,23 @@ def main():
 
         # update_google_sheet(creds, SPREADSHEET_ID, RANGE, paper_titles)
 
-        API_URL = "https://api-inference.huggingface.co/models/google/gemma-2-2b-it"
+        API_URL = "https://api-inference.huggingface.co/models/distilbert/distilbert-base-cased-distilled-squad"
         headers = {
             "Authorization": f"Bearer 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",
-            "Content-Type": "application/json",
-            "x-use-cache": "false"
         }
         payload = {
-            "inputs": prompt,
+            "inputs": {
+                "question": 'What are the paper mentioned?',
+                "context": f'{text_content}'
+            },
         }
 
-        try:
-            response = requests.post(API_URL, headers=headers, json=payload)
-            print(response.json())
-        except Exception as e:
-            print(f"Err {e}")
+        response = requests.post(API_URL, headers=headers, json=payload)
+        print(response.json())
 
     except HttpError as err:
+        print(err)
+    except Exception as err:
         print(err)
 
 
