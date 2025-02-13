@@ -3,42 +3,31 @@ import os.path
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from ollama import chat, ChatResponse
 
-# If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/documents.readonly"]
-
-# The ID of a sample document.
-DOCUMENT_ID = "1vrtnnG87pp2PuEXGZFWWYWSyA_Ls04cZTzKApcJFS1s"
+from config import *
+from google_services import *
 
 
 def query_llm(prompt, model="deepseek-r1:1.5b"):
-    response: ChatResponse = chat(model=model, messages=[
-        {
-            'role': 'user',
-            'content': prompt,
-        },
-    ])
+    response: ChatResponse = chat(
+        model=model,
+        messages=[
+            {
+                'role': 'user',
+                'content': prompt,
+            }
+        ]
+    )
 
     return response.message.content
 
 
-def extract_text_from_doc(document):
-    text = ""
-    for element in document.get("body").get("content", []):
-        if "paragraph" in element:
-            for elem in element["paragraph"]["elements"]:
-                if "textRun" in elem:
-                    text += elem["textRun"]["content"]  # Extract text
-
-    return text.strip()  # Remove unnecessary spaces/newlines
-
-
 def main():
-    """Shows basic usage of the Docs API.
-    Prints the title of a sample document.
+    """
+        Shows basic usage of the Docs API.
+        Prints the title of a sample document.
     """
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -60,16 +49,14 @@ def main():
             token.write(creds.to_json())
 
     try:
-        service = build("docs", "v1", credentials=creds)
+        text_content = read_google_docs(creds, DOCUMENT_ID)
 
-        # Retrieve the documents contents from the Docs service.
-        document = service.documents().get(documentId=DOCUMENT_ID).execute()
-        text_content = extract_text_from_doc(document)
-
-        prompt = f'summary this document: {text_content}'
+        prompt = f'Extract all papers from this text: {text_content}'
 
         paper_titles = query_llm(prompt)
-        print(paper_titles)
+
+        update_google_sheet(creds, SPREADSHEET_ID, RANGE, paper_titles)
+
     except HttpError as err:
         print(err)
 
