@@ -1,0 +1,9 @@
+# If modifying these scopes, delete the file token.json.
+SCOPES = [
+    "https://www.googleapis.com/auth/documents.readonly",
+    "https://www.googleapis.com/auth/spreadsheets"
+]
+
+DOCUMENT_ID = ""
+SPREADSHEET_ID = ""
+RANGE = ""
