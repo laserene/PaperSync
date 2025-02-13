@@ -1,5 +1,6 @@
 from googleapiclient.discovery import build
 
+
 def extract_text_from_doc(document):
     text = ""
     for element in document.get("body").get("content", []):
