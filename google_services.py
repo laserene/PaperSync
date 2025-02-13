@@ -1,4 +1,7 @@
+import redis
 from googleapiclient.discovery import build
+
+r = redis.Redis(host='localhost', port=6379, db=0)
 
 
 def extract_text_from_doc(document):
@@ -19,13 +22,19 @@ def read_google_docs(creds, document_id):
     :param document_id:
     :return: content of the document
     """
-    service = build("docs", "v1", credentials=creds)
 
-    # Retrieve the documents contents from the Docs service.
-    document = service.documents().get(documentId=document_id).execute()
-    text_content = extract_text_from_doc(document)
+    if r.get(document_id) is None:
+        service = build("docs", "v1", credentials=creds)
 
-    return text_content
+        # Retrieve the documents contents from the Docs service.
+        document = service.documents().get(documentId=document_id).execute()
+        text_content = extract_text_from_doc(document)
+
+        r.set(document_id, text_content)
+
+        return text_content
+    else:
+        return r.get(document_id)
 
 
 def update_google_sheet(creds, spreadsheet_id, cell_range, text):
