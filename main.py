@@ -1,6 +1,7 @@
 import os
 
 import requests
+from dotenv import load_dotenv
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -10,7 +11,7 @@ from huggingface_hub import InferenceClient
 from config import *
 from google_services import *
 
-os.environ['HF_TOKEN'] = "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"
+load_dotenv()
 
 
 def query_llm(prompt, model="deepseek-r1:1.5b"):
