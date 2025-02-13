@@ -61,17 +61,15 @@ def main():
 
     try:
         text_content = read_google_docs(creds, DOCUMENT_ID)
-        prompt = (f'Output a list of paper mentioned in the report seperated by a comma. '
+        prompt = (f'Return only the paper titles as a comma-separated list. No additional text.'
                   f'\nHere is the report:'
                   f'{text_content}\n\n #### \nOutput:')
 
-        # paper_titles = query_llm(prompt)
-
-        # update_google_sheet(creds, SPREADSHEET_ID, RANGE, paper_titles)
-
         response = query_llm(prompt)
-
-        print(response)
+        papers = response.choices[0].message.content.split(',')
+        papers = list(map(lambda x: x.strip(), papers))
+        print(papers)
+        # update_google_sheet(creds, SPREADSHEET_ID, RANGE, paper_titles)
 
     except HttpError as err:
         print(err)
