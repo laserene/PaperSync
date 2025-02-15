@@ -2,8 +2,6 @@ from diskcache import Cache
 from googleapiclient.discovery import build
 from googlesearch import search
 
-cache = Cache('./caches')
-
 
 def insert_row(service, spreadsheet_id, num_rows, position=5):
     request_body = {
@@ -42,6 +40,7 @@ def read_google_docs(creds, document_id):
     :param document_id:
     :return: content of the document
     """
+    cache = Cache('./caches')
 
     if cache.get(document_id) is None:
         service = build("docs", "v1", credentials=creds)
