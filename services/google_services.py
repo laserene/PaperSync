@@ -57,7 +57,7 @@ def read_google_docs(creds, document_id):
         return cache.get(document_id)
 
 
-def update_google_sheet(creds, spreadsheet_id, papers, paper_links, cell_range):
+def update_google_sheet(creds, spreadsheet_id, papers, paper_links):
     """
     Update Google Sheets with extracted information from Google Docs. A paper duplication check is performed before a
     paper is added.
@@ -65,7 +65,6 @@ def update_google_sheet(creds, spreadsheet_id, papers, paper_links, cell_range):
     :param spreadsheet_id:
     :param papers:
     :param paper_links:
-    :param cell_range:
     :return: None
     """
     service = build("sheets", "v4", credentials=creds)

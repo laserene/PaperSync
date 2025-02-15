@@ -63,23 +63,13 @@ def main():
             token.write(creds.to_json())
 
     try:
-        # text_content = read_google_docs(creds, DOCUMENT_ID)
-        # prompt = (f'Return only the paper titles as JSON. No additional text.'
-        #           f'\nHere is the report:'
-        #           f'{text_content}\n\n #### \nOutput:')
-        #
-        # papers = query_llm(prompt)
-        # paper_links = get_paper_link(papers)
+        text_content = read_google_docs(creds, DOCUMENT_ID)
+        prompt = (f'Return only the paper titles as JSON. No additional text.'
+                  f'\nHere is the report:'
+                  f'{text_content}\n\n #### \nOutput:')
 
-        papers = [
-            "BERT: Pre-training of Deep Bidirectional Transformers",
-            "Attention Is All You Neeaddad"
-        ]
-
-        paper_links = [
-            'https://arxiv.org/abs/1810.04805',
-            'https://arxiv.org/abs/1706.03762'
-        ]
+        papers = query_llm(prompt)
+        paper_links = get_paper_link(papers)
 
         update_google_sheet(creds, SPREADSHEET_ID, papers, paper_links, RANGE)
 
