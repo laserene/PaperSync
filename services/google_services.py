@@ -5,7 +5,7 @@ from googlesearch import search
 cache = Cache('./caches')
 
 
-def insert_row(service, spreadsheet_id, position=5):
+def insert_row(service, spreadsheet_id, num_rows, position=5):
     request_body = {
         "requests": [
             {
@@ -14,7 +14,7 @@ def insert_row(service, spreadsheet_id, position=5):
                         "sheetId": 0,
                         "dimension": "ROWS",
                         "startIndex": position - 1,
-                        "endIndex": position,
+                        "endIndex": position + num_rows - 1,
                     },
                     "inheritFromBefore": True,
                 }
@@ -79,7 +79,7 @@ def update_google_sheet(creds, spreadsheet_id, papers, paper_links):
     filtered_papers = {key: value for key, value in papers_info.items() if key not in column_data}
 
     # Update
-    insert_row(service, spreadsheet_id)
+    insert_row(service, spreadsheet_id, len(filtered_papers))
     data_to_insert = [['=ROW()-4', key, 'paper', '', '', value] for key, value in filtered_papers.items()]
     if data_to_insert:
         for data in data_to_insert:
