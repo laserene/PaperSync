@@ -3,3 +3,5 @@
 **/credentials.json
 **/token.json
 **/config.py
+**/.env
+**/caches

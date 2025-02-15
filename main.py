@@ -1,27 +1,41 @@
-import os.path
+import os
 
+from dotenv import load_dotenv
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.errors import HttpError
-from ollama import chat, ChatResponse
+from groq import Groq
+from langchain_core.output_parsers.json import JsonOutputParser
 
 from config import *
-from google_services import *
+from services.google_services import *
+
+load_dotenv()
 
 
-def query_llm(prompt, model="deepseek-r1:1.5b"):
-    response: ChatResponse = chat(
+def query_llm(prompt, model="llama3-8b-8192"):
+    client = Groq()
+    messages = [
+        {"role": "system", "content": "You are a helpful AI Agent in report reading. You are tasked with reading a "
+                                      "report that often contains references to other papers and extract all paper "
+                                      "titles. References are often bounded inside a pair of parenthesis and follow "
+                                      "the (author - paper title) format. Do not duplicate the paper of the report. "},
+        {"role": "user", "content": prompt}
+    ]
+
+    completion = client.chat.completions.create(
         model=model,
-        messages=[
-            {
-                'role': 'user',
-                'content': prompt,
-            }
-        ]
+        messages=messages,
+        temperature=1,
+        max_completion_tokens=1024,
+        top_p=1,
+        stop=None,
     )
 
-    return response.message.content
+    json_parser = JsonOutputParser()
+    output = json_parser.parse(completion.choices[0].message.content)
+    return output
 
 
 def main():
@@ -50,14 +64,18 @@ def main():
 
     try:
         text_content = read_google_docs(creds, DOCUMENT_ID)
+        prompt = (f'Return only the paper titles as JSON. No additional text.'
+                  f'\nHere is the report:'
+                  f'{text_content}\n\n #### \nOutput:')
 
-        prompt = f'Extract all papers from this text: {text_content}'
+        papers = query_llm(prompt)
+        paper_links = get_paper_link(papers)
 
-        paper_titles = query_llm(prompt)
-
-        update_google_sheet(creds, SPREADSHEET_ID, RANGE, paper_titles)
+        update_google_sheet(creds, SPREADSHEET_ID, papers, paper_links)
 
     except HttpError as err:
+        print(err)
+    except Exception as err:
         print(err)
 
 
