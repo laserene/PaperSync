@@ -1,13 +1,12 @@
 import os
 
-from langchain_core.output_parsers.json import JsonOutputParser
-
 from dotenv import load_dotenv
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.errors import HttpError
 from groq import Groq
+from langchain_core.output_parsers.json import JsonOutputParser
 
 from config import *
 from services.google_services import *
@@ -64,18 +63,25 @@ def main():
             token.write(creds.to_json())
 
     try:
-        text_content = read_google_docs(creds, DOCUMENT_ID)
-        prompt = (f'Return only the paper titles as JSON. No additional text.'
-                  f'\nHere is the report:'
-                  f'{text_content}\n\n #### \nOutput:')
+        # text_content = read_google_docs(creds, DOCUMENT_ID)
+        # prompt = (f'Return only the paper titles as JSON. No additional text.'
+        #           f'\nHere is the report:'
+        #           f'{text_content}\n\n #### \nOutput:')
+        #
+        # papers = query_llm(prompt)
+        # paper_links = get_paper_link(papers)
 
-        papers = query_llm(prompt)
-        paper_links = get_paper_link(papers)
-        
-        for i in range(len(papers)):
-            print(f'{papers[i]} - {paper_links[i]}')
-        
-        # update_google_sheet(creds, SPREADSHEET_ID, RANGE, paper_titles)
+        papers = [
+            "BERT: Pre-training of Deep Bidirectional Transformers",
+            "Attention Is All You Neeaddad"
+        ]
+
+        paper_links = [
+            'https://arxiv.org/abs/1810.04805',
+            'https://arxiv.org/abs/1706.03762'
+        ]
+
+        update_google_sheet(creds, SPREADSHEET_ID, papers, paper_links, RANGE)
 
     except HttpError as err:
         print(err)

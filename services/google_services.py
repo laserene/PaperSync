@@ -5,6 +5,25 @@ from googlesearch import search
 cache = Cache('./caches')
 
 
+def insert_row(service, spreadsheet_id, position=5):
+    request_body = {
+        "requests": [
+            {
+                "insertDimension": {
+                    "range": {
+                        "sheetId": 0,
+                        "dimension": "ROWS",
+                        "startIndex": position - 1,
+                        "endIndex": position,
+                    },
+                    "inheritFromBefore": True,
+                }
+            }
+        ]
+    }
+    service.spreadsheets().batchUpdate(spreadsheetId=spreadsheet_id, body=request_body).execute()
+
+
 def extract_text_from_doc(document):
     text = ""
     for element in document.get("body").get("content", []):
@@ -38,27 +57,42 @@ def read_google_docs(creds, document_id):
         return cache.get(document_id)
 
 
-def update_google_sheet(creds, spreadsheet_id, cell_range, text):
+def update_google_sheet(creds, spreadsheet_id, papers, paper_links, cell_range):
     """
     Update Google Sheets with extracted information from Google Docs. A paper duplication check is performed before a
     paper is added.
     :param creds: credentials
     :param spreadsheet_id:
+    :param papers:
+    :param paper_links:
     :param cell_range:
-    :param text:
     :return: None
     """
     service = build("sheets", "v4", credentials=creds)
+    result = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range='B5:B100').execute()
+    values = result.get('values', [])
 
-    values = [[text]]  # Wrap text in a list
-    body = {"values": values}
+    # Flatten the list of lists
+    column_data = [item for sublist in values for item in sublist]
 
-    service.spreadsheets().values().update(
-        spreadsheetId=spreadsheet_id,
-        range=cell_range,
-        valueInputOption="RAW",
-        body=body
-    ).execute()
+    # Filtering
+    papers_info = dict(zip(papers, paper_links))
+    filtered_papers = {key: value for key, value in papers_info.items() if key not in column_data}
+
+    # Update
+    insert_row(service, spreadsheet_id)
+    data_to_insert = [['=ROW()-4', key, 'paper', '', '', value] for key, value in filtered_papers.items()]
+    if data_to_insert:
+        for data in data_to_insert:
+            body = {
+                'values': [data]
+            }
+            service.spreadsheets().values().append(
+                spreadsheetId=spreadsheet_id,
+                range='A5',
+                valueInputOption='USER_ENTERED',
+                body=body
+            ).execute()
 
     print("✅ Google Sheet updated successfully!")
 
