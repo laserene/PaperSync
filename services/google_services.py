@@ -1,5 +1,6 @@
 from diskcache import Cache
 from googleapiclient.discovery import build
+from googlesearch import search
 
 cache = Cache('./caches')
 
@@ -60,3 +61,14 @@ def update_google_sheet(creds, spreadsheet_id, cell_range, text):
     ).execute()
 
     print("✅ Google Sheet updated successfully!")
+
+
+def get_paper_link(papers):
+    links = []
+    for paper in papers:
+        query = f"{paper} site:arxiv.org"
+        results = search(query, num_results=1)  # Get the top result
+
+        links.append(results[0])
+
+    return links
