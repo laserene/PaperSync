@@ -3,7 +3,7 @@ from googleapiclient.discovery import build
 from googlesearch import search
 
 
-def insert_row(service, spreadsheet_id, num_rows, position=5):
+def insert_row(service, spreadsheet_id, num_rows, position):
     request_body = {
         "requests": [
             {
@@ -56,7 +56,7 @@ def read_google_docs(creds, document_id):
         return cache.get(document_id)
 
 
-def update_google_sheet(creds, spreadsheet_id, papers, paper_links):
+def update_google_sheet(creds, spreadsheet_id, papers, paper_links, insertion_index):
     """
     Update Google Sheets with extracted information from Google Docs. A paper duplication check is performed before a
     paper is added.
@@ -78,7 +78,7 @@ def update_google_sheet(creds, spreadsheet_id, papers, paper_links):
     filtered_papers = {key: value for key, value in papers_info.items() if key not in column_data}
 
     # Update
-    insert_row(service, spreadsheet_id, len(filtered_papers))
+    insert_row(service, spreadsheet_id, len(filtered_papers), insertion_index)
     data_to_insert = [['=ROW()-4', key, 'paper', '', '', value] for key, value in filtered_papers.items()]
     if data_to_insert:
         for data in data_to_insert:

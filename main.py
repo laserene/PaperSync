@@ -71,7 +71,7 @@ def main():
         papers = query_llm(prompt)
         paper_links = get_paper_link(papers)
 
-        update_google_sheet(creds, SPREADSHEET_ID, papers, paper_links)
+        update_google_sheet(creds, SPREADSHEET_ID, papers, paper_links, INSERTION_INDEX)
 
     except HttpError as err:
         print(err)
