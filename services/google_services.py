@@ -69,6 +69,6 @@ def get_paper_link(papers):
         query = f"{paper} site:arxiv.org"
         results = search(query, num_results=1)  # Get the top result
 
-        links.append(results[0])
+        links.append(next(iter(results)))
 
     return links
